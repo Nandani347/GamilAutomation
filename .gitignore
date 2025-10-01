@@ -1,5 +1,6 @@
 # Credentials and tokens
 credentials.json
+service-account.json
 token.json
 *.key
 *.pem

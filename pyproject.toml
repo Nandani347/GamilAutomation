@@ -1,0 +1,13 @@
+[project]
+name = "gamilautomation"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "google-api-python-client==2.183.0",
+    "google-auth-oauthlib==1.2.2",
+    "langchain==0.3.27",
+    "protobuf==3.12.4",
+    "supabase>=2.20.0",
+]
