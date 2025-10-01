@@ -115,4 +115,3 @@ The system will:
 ## License
 
 MIT
-```
