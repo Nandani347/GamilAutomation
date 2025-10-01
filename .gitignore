@@ -41,6 +41,7 @@ env/
 .vscode/
 *.swp
 *.swo
+gmailProcesses.log
 
 # OS specific files
 .DS_Store
