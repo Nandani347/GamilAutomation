@@ -112,6 +112,16 @@ The system will:
 - `MCP_GMAIL_CREDENTIALS_PATH`: Path to credentials.json (default: "credentials.json")
 - `MCP_GMAIL_TOKEN_PATH`: Path to store OAuth token (default: "token.json")
 
+
+## Test Cases
+```bas
+uv run demo.py
+```
+
+```bash
+python -m GmailAutomation.LLM.EmailAgent
+```
+
 ## License
 
 MIT

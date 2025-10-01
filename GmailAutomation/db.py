@@ -1,5 +1,6 @@
 from supabase import Client, create_client
 from dotenv import load_dotenv
+from agents import function_tool
 import os
 
 load_dotenv()  # take environment variables from .env.
@@ -28,6 +29,7 @@ def fetch_client_emails():
 # ----------------------------
 # Tool function
 # ----------------------------
+@function_tool
 def fetch_personality_settings(user_id: str = None, client_id: str = None) -> dict:
     """
     Fetch essential personality settings for LLM agent use.
@@ -62,7 +64,8 @@ def fetch_personality_settings(user_id: str = None, client_id: str = None) -> di
         return personality_settings
     else:
         return {}  # No data found
-    
+
+@function_tool    
 def fetch_client_and_project_data(client_id: str) -> dict:
     """
     Fetch key client and project context for the LLM agent.
