@@ -62,9 +62,63 @@ def fetch_personality_settings(user_id: str = None, client_id: str = None) -> di
         return personality_settings
     else:
         return {}  # No data found
+    
+def fetch_client_and_project_data(client_id: str) -> dict:
+    """
+    Fetch key client and project context for the LLM agent.
+    Returns minimal structured data.
+    """
+
+    if not client_id:
+        raise ValueError("client_id is required")
+
+    # ---- Fetch client ----
+    client_result = supabase.table("clients") \
+        .select("id, name, industry, contact_name, contact_email, priority_level, client_notes") \
+        .eq("id", client_id) \
+        .limit(1) \
+        .execute()
+
+    if not client_result.data or len(client_result.data) == 0:
+        return {}
+
+    client = client_result.data[0]
+
+    # ---- Fetch related projects ----
+    project_result = supabase.table("projects") \
+        .select("id, name, description, billing_type, start_date, end_date, budget, status, client_goal, success_metric") \
+        .eq("client_id", client_id) \
+        .execute()
+
+    projects = project_result.data if project_result.data else []
+
+    # ---- Prepare compact response ----
+    return {
+        "client": {
+            "id": client.get("id"),
+            "name": client.get("name"),
+            "industry": client.get("industry"),
+            "contact_name": client.get("contact_name"),
+            "contact_email": client.get("contact_email"),
+            "priority_level": client.get("priority_level"),
+            "notes": client.get("client_notes"),
+        },
+        "projects": [
+            {
+                "id": p.get("id"),
+                "name": p.get("name"),
+                "description": p.get("description"),                
+                "goal": p.get("client_goal"),
+                "success_metric": p.get("success_metric"),
+            }
+            for p in projects
+        ]
+    }
 
 # if __name__ == "__main__":
     
+#     data=fetch_client_and_project_data(client_id="1ad1e31e-11ca-4342-84bb-eec461585c05")
+#     print(data) 
     
     # settings=fetch_personality_settings(user_id="0b669362-6720-47df-a788-d4094e1cfade")
     # print(f"📥 Personality settings from Supabase: {settings}")
