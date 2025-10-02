@@ -3,16 +3,14 @@ import os
 import re
 import tempfile
 import time
-
-from logger import logger
 from datetime import datetime
+
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
 from GmailAutomation.auth import get_gmail_service
 from GmailAutomation.db import fetch_client_emails
-from GmailAutomation.LLM.EmailAgent import process_email
-
 
 # Initialize the Gmail service
 service = get_gmail_service()
@@ -64,9 +62,12 @@ def fetch_new_emails(service):
         profile = service.users().getProfile(userId="me").execute()
         new_email = profile["emailAddress"]
 
+        # Fetch client emails once
+        client_emails = fetch_client_emails()
+
         if last_history_id is None:
             last_history_id = profile["historyId"]
-            logger.info(f"✅ Gmail Trigger initialized for {new_email}, historyId={last_history_id}")
+            print(f"✅ Gmail Trigger initialized for {new_email}, historyId={last_history_id}")
             return []
 
         history = (
@@ -82,10 +83,6 @@ def fetch_new_emails(service):
                 if "messagesAdded" in record:
                     for msg in record["messagesAdded"]:
                         msg_id = msg["message"]["id"]
-                        
-                        # Fetch client emails once
-                        client_emails = fetch_client_emails()
-                        
                         full_msg = (
                             service.users()
                             .messages()
@@ -234,7 +231,7 @@ def fetch_new_emails(service):
 
                         # Only continue if sender is in client emails
                         if sender not in client_emails:
-                            logger.warning(f"❌ Skipping {sender}, not in client list {client_emails}")
+                            print(f"❌ Skipping {sender}, not in client list {client_emails}")
                             continue  # Skip this email and move to the next one
 
                         full_msg.get("snippet", "")
@@ -258,10 +255,10 @@ def fetch_new_emails(service):
         return messages
 
     except HttpError as error:
-        logger.error(f"⚠️ Gmail API error: {error}")
+        print(f"⚠️ Gmail API error: {error}")
         # If rate limit error, wait longer before retrying
         if error.resp.status in [429, 503]:
-            logger.warning("⏳ Rate limit hit, waiting 10 seconds...")
+            print("⏳ Rate limit hit, waiting 10 seconds...")
             time.sleep(10)
         return []
 
@@ -290,6 +287,7 @@ def download_attachment(service, message_id, attachment_id, filename, save_dir):
 
     return file_path
 
+
 # ------------------------------------------------------------
 # Main Poll Loop
 # ------------------------------------------------------------
@@ -297,7 +295,7 @@ def download_attachment(service, message_id, attachment_id, filename, save_dir):
 
 def main():
     service = get_gmail_service()
-    logger.info("🚀 Starting Gmail Trigger (poll every 3s)...")
+    print("🚀 Starting Gmail Trigger (poll every 3s)...")
 
     no_email_counter = 0
 
@@ -306,7 +304,49 @@ def main():
             new_emails = fetch_new_emails(service)
             if new_emails:
                 no_email_counter = 0
-                logger.info(f"📬 {len(new_emails)} new email(s):")
+                print(f"📬 {len(new_emails)} new email(s):")
+
+                # for email in new_emails:
+                #     with tempfile.TemporaryDirectory() as tmpdir:
+                #         attachment_data = []
+
+                #         if email["attachments"]:
+                #             for att in email["attachments"]:
+                #                 file_path = download_attachment(
+                #                     service,
+                #                     message_id=email["id"],
+                #                     attachment_id=att["attachmentId"],
+                #                     filename=att["filename"],
+                #                     save_dir=tmpdir
+                #                 )
+                #                 print(f"📎 Saved attachment: {file_path}")
+
+                #                 # 👉 Process immediately (send to LLM or parse here)
+                #                 if att["mimeType"].startswith("image/"):
+                #                     result = process_image(file_path)   # call your image/LLM pipeline
+                #                 elif att["mimeType"] in ["application/pdf", "text/csv", "application/vnd.ms-excel"]:
+                #                     result = process_document(file_path)  # call doc parser
+                #                 else:
+                #                     result = None
+
+                #                 attachment_data.append({
+                #                     "filename": att["filename"],
+                #                     "mimeType": att["mimeType"],
+                #                     "result": result  # processed output, not raw file
+                #                 })
+
+                #         data = {
+                #             "Message_ID": email["id"],
+                #             "From": email["from"],
+                #             "Subject": email["subject"],
+                #             "Body": email["body"],
+                #             "is_important": email["is_important"],
+                #             "Date": email["date"],
+                #             "attachment_data": attachment_data
+                #         }
+
+                #         yield data   # all files already processed, no need to keep them
+
                 for email in new_emails:
                     with tempfile.TemporaryDirectory() as tmpdir:
                         attachment_data = []
@@ -327,8 +367,7 @@ def main():
                                         "path": file_path,
                                     }
                                 )
-                                logger.info(f"📎 Saved attachment: {file_path}")
-
+                                print(f"📎 Saved attachment: {file_path}")
                         data = {
                             "Message_ID": email["id"],
                             "From": email["from"],
@@ -338,20 +377,17 @@ def main():
                             "Date": email["date"],
                             "attachment_data": attachment_data,
                         }
-                        
-                        response = process_email(data)
 
-                    yield data
-                    logger.info(f"🤖 LLM Response: {response}")
-                    
+                        yield data
+
             else:
                 no_email_counter += 1
                 if no_email_counter % HEARTBEAT_INTERVAL == 0:
-                    logger.info(f"⏱ Still running... no new emails in the last {HEARTBEAT_INTERVAL * 3} seconds")
+                    print(f"⏱ Still running... no new emails in the last {HEARTBEAT_INTERVAL * 3} seconds")
 
             time.sleep(3)
     except KeyboardInterrupt:
-        logger.info("🛑 Gmail Trigger stopped by user")
+        print("\n🛑 Gmail Trigger stopped by user")
 
 
 if __name__ == "__main__":

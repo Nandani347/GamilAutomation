@@ -1,121 +1,115 @@
-import os
 import base64
-
-from GmailAutomation.auth import get_gmail_service, Credentials
-from googleapiclient.discovery import build,Resource
-from typing import Any, Dict
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from GmailAutomation.InsertionPipeline.dummydata import raw
+from typing import Any, Dict
 
+from googleapiclient.discovery import Resource
 
-# Initialize the Gmail service
-service = get_gmail_service()
-
-# Type alias for the Gmail service
-GmailService = Resource
+from GmailAutomation.auth import get_gmail_service
+from GmailAutomation.dummydata import raw
 
 DEFAULT_USER_ID = "me"
-EMAIL_PREVIEW_LENGTH = 200  # Number of characters to show in the preview
+EMAIL_PREVIEW_LENGTH = 200  # Number of characters to show in preview
 
-# ------------------------------------------------------------
-# Gmail API Setup
-# ------------------------------------------------------------
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+# Initialize Gmail service
+service: Resource = get_gmail_service()
 
-def get_gmail_service():
-    if not os.path.exists("token.json"):
-        raise Exception("⚠️ Missing token.json. Run Gmail OAuth flow first.")
-    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    return build("gmail", "v1", credentials=creds)
 
-def gmail_send_email(
-    service: GmailService,
-    sender: str,
-    to: str,
-    subject: str,
-    body: str,
-    user_id: str = DEFAULT_USER_ID,
-) -> Dict[str, Any]:
-    """
-    Compose and send an email.
+def create_mime_message(sender: str, to: str, subject: str, body: str) -> Dict[str, Any]:
+    """Create a MIME message for sending via Gmail API"""
+    msg = MIMEMultipart()
+    msg["to"] = to
+    msg["from"] = sender
+    msg["subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
 
-    Args:
-        service: Gmail API service instance
-        sender: Email sender
-        to: Email recipient
-        subject: Email subject
-        body: Email body text
-        user_id: Gmail user ID (default: 'me')
-    
-    Returns:
-        Sent message object
-    """
-    message = MIMEText(body)
-    message["to"] = to
-    message["from"] = sender
-    message["subject"] = subject
-    
-    # Encode to base64url
-    encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-    create_message = {"raw": encoded_message}
-    
-    return service.users().messages().send(userId=user_id, body=create_message).execute()
+    raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+    return {"raw": raw_message}
 
-def send_email(
-    to: str, subject: str, body: str
-) -> str:
-    """
-    Compose and send an email.
 
-    Args:
-        to: Recipient email address
-        subject: Email subject
-        body: Email body content
-        
-    Returns:
-        Content of the sent email
-    """
+def create_reply_message(service: Resource, user_id: str, message_id: str, body: str) -> Dict[str, Any]:
+    """Create a reply to an existing email"""
+    original = service.users().messages().get(userId=user_id, id=message_id, format="full").execute()
+    thread_id = original["threadId"]
+
+    headers = original["payload"]["headers"]
+    subject = next((h["value"] for h in headers if h["name"].lower() == "subject"), "")
+    sender_email = next((h["value"] for h in headers if h["name"].lower() == "from"), "")
+    msg_id_header = next((h["value"] for h in headers if h["name"].lower() == "message-id"), None)
+
+    reply_subject = subject if subject.lower().startswith("re:") else f"Re: {subject}"
+
+    message = MIMEText(body, "plain")
+    message["to"] = sender_email
+    message["from"] = service.users().getProfile(userId=user_id).execute().get("emailAddress")
+    message["subject"] = reply_subject
+    if msg_id_header:
+        message["In-Reply-To"] = msg_id_header
+        message["References"] = msg_id_header
+
+    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    return {"raw": raw_message, "threadId": thread_id}
+
+
+def send_email(to: str, subject: str, body: str) -> str:
+    """Send a direct email"""
     sender = service.users().getProfile(userId=DEFAULT_USER_ID).execute().get("emailAddress")
-    message = gmail_send_email(
-        service, sender=sender, to=to, subject=subject, body=body, user_id=DEFAULT_USER_ID
-    )
+    message = create_mime_message(sender, to, subject, body)
+    sent = service.users().messages().send(userId=DEFAULT_USER_ID, body=message).execute()
 
-    message_id = message.get("id")
     return f"""
-            Email sent successfully with ID: {message_id}
-            To: {to}
-            Subject: {subject}
-            Body: {body[:EMAIL_PREVIEW_LENGTH]}{"..." if len(body) > EMAIL_PREVIEW_LENGTH else ""}
-            """
+✅ Email sent successfully direct to the inbox!
+To: {to}
+Subject: {subject}
+Message ID: {sent.get("id")}
+Body: {body[:EMAIL_PREVIEW_LENGTH]}{"..." if len(body) > EMAIL_PREVIEW_LENGTH else ""}
+"""
+
+
+def send_reply(message_id: str, body: str) -> str:
+    """Send a reply to an existing message"""
+    reply_msg = create_reply_message(service, DEFAULT_USER_ID, message_id, body)
+    sent = service.users().messages().send(userId=DEFAULT_USER_ID, body=reply_msg).execute()
+
+    return f"""
+✅ Reply sent successfully in initial email reply !!
+Reply Message ID: {sent.get("id")}
+Thread ID: {sent.get("threadId")}
+In-Reply-To: {message_id}
+Body: {body[:EMAIL_PREVIEW_LENGTH]}{"..." if len(body) > EMAIL_PREVIEW_LENGTH else ""}
+"""
+
+
+def handle_escalation(subject: str, reason: str) -> str:
+    """Generate escalation email body"""
+    escalation_body = f"""
+⚠️ Escalation required:
+
+Subject: {subject}
+Reason: {reason}
+
+Please address this issue as soon as possible.
+
+Automated Email System
+"""
+    return escalation_body
+
 
 def main():
-    # Example usage
-    data=raw
-    if data['esclate']==False: 
-         
-        result=send_email(
-            to=data['to_email'],
-            subject=data['subject'],
-            body=data['response']
-            )
-        print("📤 Email sent successfully!")
+    data = raw
+
+    if data.get("esclate", False):
+        escalation_email = handle_escalation(
+            data["subject"], data.get("esclation_reason", "No reason provided")
+        )
+        print(escalation_email)
+    elif data.get("reply_to", False):
+        result = send_reply(message_id=data["message_id"], body=data["response"])
         print(result)
     else:
-        escalation_body=f"""
-        Hello Team,
+        result = send_email(to=data["to_email"], subject=data["subject"], body=data["response"])
+        print(result)
 
-        The following email requires your immediate attention:
 
-        Subject: {data['subject']}
-        Reason for Escalation: {data['esclation_reason']}
-        
-        Please address this issue as soon as possible.
-
-        Best regards,
-        Automated Email System
-        """
-        print("⚠️ Escalation required. Sending to support team.")
-        print(escalation_body)
-    
 if __name__ == "__main__":
     main()
