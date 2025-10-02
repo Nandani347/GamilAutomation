@@ -1,7 +1,6 @@
 import base64
 import os
 import re
-import tempfile
 import time
 
 from logger import logger
@@ -11,7 +10,6 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from GmailAutomation.auth import get_gmail_service
 from GmailAutomation.db import fetch_client_emails
-from GmailAutomation.LLM.EmailAgent import process_email
 
 
 # Initialize the Gmail service
@@ -35,8 +33,6 @@ def get_gmail_service():
 # Polling Logic
 # ------------------------------------------------------------
 last_history_id = None
-no_email_counter = 0  # counts iterations with no new emails
-HEARTBEAT_INTERVAL = 20  # how many cycles before logging "still running"
 
 """
 Symbol Handling Helper if needed in future:
@@ -234,7 +230,6 @@ def fetch_new_emails(service):
 
                         # Only continue if sender is in client emails
                         if sender not in client_emails:
-                            logger.warning(f"❌ Skipping {sender}, not in client list {client_emails}")
                             continue  # Skip this email and move to the next one
 
                         full_msg.get("snippet", "")
@@ -289,70 +284,3 @@ def download_attachment(service, message_id, attachment_id, filename, save_dir):
         f.write(file_data)
 
     return file_path
-
-# ------------------------------------------------------------
-# Main Poll Loop
-# ------------------------------------------------------------
-
-
-def main():
-    service = get_gmail_service()
-    logger.info("🚀 Starting Gmail Trigger (poll every 3s)...")
-
-    no_email_counter = 0
-
-    try:
-        while True:
-            new_emails = fetch_new_emails(service)
-            if new_emails:
-                no_email_counter = 0
-                logger.info(f"📬 {len(new_emails)} new email(s):")
-                for email in new_emails:
-                    with tempfile.TemporaryDirectory() as tmpdir:
-                        attachment_data = []
-
-                        if email["attachments"]:
-                            for att in email["attachments"]:
-                                file_path = download_attachment(
-                                    service,
-                                    message_id=email["id"],
-                                    attachment_id=att["attachmentId"],
-                                    filename=att["filename"],
-                                    save_dir=tmpdir,
-                                )
-                                attachment_data.append(
-                                    {
-                                        "filename": att["filename"],
-                                        "mimeType": att["mimeType"],
-                                        "path": file_path,
-                                    }
-                                )
-                                logger.info(f"📎 Saved attachment: {file_path}")
-
-                        data = {
-                            "Message_ID": email["id"],
-                            "From": email["from"],
-                            "Subject": email["subject"],
-                            "Body": email["body"],
-                            "is_important": email["is_important"],
-                            "Date": email["date"],
-                            "attachment_data": attachment_data,
-                        }
-                        
-                        response = process_email(data)
-
-                    yield data
-                    logger.info(f"🤖 LLM Response: {response}")
-                    
-            else:
-                no_email_counter += 1
-                if no_email_counter % HEARTBEAT_INTERVAL == 0:
-                    logger.info(f"⏱ Still running... no new emails in the last {HEARTBEAT_INTERVAL * 3} seconds")
-
-            time.sleep(3)
-    except KeyboardInterrupt:
-        logger.info("🛑 Gmail Trigger stopped by user")
-
-
-if __name__ == "__main__":
-    main()

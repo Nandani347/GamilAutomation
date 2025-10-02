@@ -6,10 +6,9 @@ from typing import Any, Dict
 from googleapiclient.discovery import Resource
 
 from GmailAutomation.auth import get_gmail_service
-from GmailAutomation.dummydata import raw
 
 DEFAULT_USER_ID = "me"
-EMAIL_PREVIEW_LENGTH = 200  # Number of characters to show in preview
+EMAIL_PREVIEW_LENGTH = 500  # Number of characters to show in preview
 
 # Initialize Gmail service
 service: Resource = get_gmail_service()
@@ -93,23 +92,3 @@ Please address this issue as soon as possible.
 Automated Email System
 """
     return escalation_body
-
-
-def main():
-    data = raw
-
-    if data.get("esclate", False):
-        escalation_email = handle_escalation(
-            data["subject"], data.get("esclation_reason", "No reason provided")
-        )
-        print(escalation_email)
-    elif data.get("reply_to", False):
-        result = send_reply(message_id=data["message_id"], body=data["response"])
-        print(result)
-    else:
-        result = send_email(to=data["to_email"], subject=data["subject"], body=data["response"])
-        print(result)
-
-
-if __name__ == "__main__":
-    main()
