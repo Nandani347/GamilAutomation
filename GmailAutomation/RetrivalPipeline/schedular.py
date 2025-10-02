@@ -10,6 +10,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from GmailAutomation.auth import get_gmail_service
 from GmailAutomation.db import fetch_client_emails
+from GmailAutomation.LLM.EmailAgent import process_email
+
 
 # Initialize the Gmail service
 service = get_gmail_service()
@@ -333,8 +335,11 @@ def main():
                         "Date": email["date"],
                         "attachment_data": attachment_data,
                     }
+                    
+                    response = process_email(data)
 
                     yield data
+                    logger.info(f"🤖 LLM Response: {response}")
 
             else:
                 no_email_counter += 1
