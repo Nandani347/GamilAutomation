@@ -117,10 +117,10 @@ def fetch_client_and_project_data(client_email: str) -> dict:
     }
 
    
-# data=fetch_client_and_project_data("nandaniramoliya@gmail.com")
+# data=fetch_client_and_project_data("xyz@gmail.com")
 # print(data) 
 
-# settings=fetch_personality_settings("nandaniramoliya@gmail.com")
+# settings=fetch_personality_settings("xyz@gmail.com")
 # print(f"📥 Personality settings from Supabase: {settings}")
 
 # client_emails = fetch_client_emails()
