@@ -29,7 +29,7 @@ GmailAutomation/
 │   ├── auth.py
 │   ├── db.py
 │   └── ...
-├── demo.py               # Main entry point
+├── main.py               # Main entry point
 ├── logger.py             # Central logging
 ├── pyproject.toml        # Dependencies & project config
 ├── credentials.json      # ⚠️ OAuth credentials (DO NOT COMMIT)
@@ -126,8 +126,13 @@ https://console.cloud.google.com/apis/api/gmail.googleapis.com/metrics
 Start the Gmail automation script to begin monitoring for new emails:
 
 ```bash
-uv run python demo.py
+uv run python main.py
 ```
+or
+```bash
+uv run main.py
+```
+
 
 The system will:
 
