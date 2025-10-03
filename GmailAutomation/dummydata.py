@@ -1,11 +1,11 @@
 # raw = {
 #     'Message_ID': '1999fb8c1e11f668',
-#     'From': 'nandaniramoliya@gmail.com',
+#     'From': 'xyz@gmail.com',
 #     'Subject': 'Getting Error',
 #     'Body': 'Hello I am facing issue in database connection.',
 #     'is_important': True,
 #     'Date': '2025-10-01 17:51:35.000000',
-#     'attachment_data': [{'filename': 'image.png', 'mimeType': 'image/png', 'path': 'attachments/image.png'}]
+#     'attachment_data': []
 #     }
 
 # raw={
@@ -15,7 +15,6 @@
 #     "subject": "Re: Database issue",
 #     "esclation_reason": "Database is critical part in production at time of retrival",
 #     "esclate": False,
-#     "to_email": "nandaniramoliya@gmail.com",
+#     "to_email": "xyz@gmail.com",
 #     "reply_to": False,
-#     "message_id": "1999a074854f32b0",
 # }

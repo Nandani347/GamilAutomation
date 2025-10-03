@@ -23,7 +23,7 @@ SYMBOL -> Result
 > -> &gt;
 < -> &lt;
 """
-# =============================================================================================================================
+# ======================
 """
 Body Formater:
 Feched irrelevant -> replace with
@@ -198,7 +198,7 @@ def fetch_new_emails(service):
                                     + str(parsed_date.microsecond).zfill(6)
                                 )
                             except ValueError as e:
-                                print(f"⚠️ Error parsing date: {e}")
+                                logger.error(f"⚠️ Date parsing error for date '{date}': {e}")
                                 formatted_date = None
                         else:
                             formatted_date = None

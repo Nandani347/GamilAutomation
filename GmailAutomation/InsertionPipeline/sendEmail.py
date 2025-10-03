@@ -96,4 +96,8 @@ def mark_message_as_read(service, user_id: str, message_id: str):
         ).execute()
     except Exception as e:
         logger.error(f"Failed to mark message as read: {e}")
-
+        
+        
+# raw={'Message_ID': '199a899d4f0f2e00', 'query': '"Hello"', 'escalate': False, 'priority': '', 'escalation_reason': '', 'response': 'Hello, Thanks you!', 'subject': 'Re: Test', 'to_email': 'xyz@gmail.com', 'reply_to': False}        
+# result=send_email(to=raw["to_email"], subject=raw["subject"], body=raw["response"])
+# print(result)
