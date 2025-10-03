@@ -73,13 +73,10 @@ Body: {body[:EMAIL_PREVIEW_LENGTH]}{"..." if len(body) > EMAIL_PREVIEW_LENGTH el
 def handle_escalation(subject: str, reason: str) -> str:
     """Generate escalation email body"""
     escalation_body = f"""
-⚠️ Escalation required:
-
+Escalation Draft:
 Subject: {subject}
 Reason: {reason}
-
 Please address this issue as soon as possible.
-
 Automated Email System
 """
     return escalation_body

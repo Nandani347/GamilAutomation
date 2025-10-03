@@ -69,4 +69,4 @@ def get_gmail_service(
             json.dump(token_json, token)
 
     # Build the Gmail service
-    return build("gmail", "v1", credentials=creds)
+    return build("gmail", "v1", credentials=creds,cache_discovery=False )

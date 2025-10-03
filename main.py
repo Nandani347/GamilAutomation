@@ -66,9 +66,7 @@ try:
                     escalation_email = handle_escalation(
                         response["subject"], response.get("escalation_reason", "No reason provided")
                     )
-                    logger.info(f"Escalation email sent: {escalation_email}")
-                    mark_message_as_read(service, 'me', response["Message_ID"])
-                    logger.info(f"✅ Message {response['Message_ID']} marked as read")
+                    logger.info(f"⚠️ Escalation needed for email {response['Message_ID']} {escalation_email}")
                 elif response.get("reply_to", False):
                     result = send_reply(message_id=response["Message_ID"], body=response["response"])
                     logger.info(f"✅ Reply sent successfully in initial email reply! : {result}")

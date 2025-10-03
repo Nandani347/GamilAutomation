@@ -1,10 +1,9 @@
-# from GmailAutomation.db import fetch_personality_settings, fetch_client_and_project_data
+from GmailAutomation.db import fetch_personality_settings, fetch_client_and_project_data
 from openai import AsyncOpenAI
 from agents import Agent, OpenAIChatCompletionsModel, RunConfig, Runner
 from dotenv import load_dotenv
 
 import os
-import json
 import ast
 import re
 
@@ -37,6 +36,12 @@ gmail_agent = Agent(
     instructions="""
 You are an escalation triage assistant.
 You analyze client queries and output solution in strict JSON.
+
+## Workflow
+# 1. ALWAYS call 'fetch_personality_settings' tool first and use it to shape your response accordingly.
+# 2. If the "body" explicitly refers to project/client details or requires project context, optionally call 'fetch_project_and_client' tool. Otherwise, skip.
+# 3. After required tool calls, analyze the mail and produce final response in strict JSON. No markdown style at this stage email is getting process only if there's no attachment.
+# 4. If the email has attachments, proceeses if it in the processable formate otherwise tell user that can you please provide some attachment related details. 
 
 ## Escalation Rules
 Escalation is required if the query indicates:
@@ -145,8 +150,8 @@ need for assistance, despite an empty body only with attachment.", "response": "
 "subject": "Re: Facing error", "to_email": "user@example.com", "reply_to": True}
 
 """,
-    model=model
-    # tools=[fetch_personality_settings, fetch_client_and_project_data],
+    model=model,
+    tools=[fetch_personality_settings, fetch_client_and_project_data],
 )
 
 # format dict → message string

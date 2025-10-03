@@ -29,21 +29,19 @@ def fetch_client_emails():
 # Tool function
 # ----------------------------
 @function_tool
-def fetch_personality_settings(user_id: str = None, client_id: str = None) -> dict:
+def fetch_personality_settings(client_email: str = None) -> dict:
     """
     Fetch essential personality settings for LLM agent use.
 
     Returns only the key fields needed to guide responses.
     """
-    if not user_id and not client_id:
+    if not client_email:
         raise ValueError("At least one of user_id or client_id must be provided")
 
     query = supabase.table("ai_personality_settings").select("*")
 
-    if user_id:
-        query = query.eq("user_id", user_id)
-    if client_id:
-        query = query.eq("client_id", client_id)
+    if client_email:
+        query = query.eq("contact_email", client_email)
 
     result = query.limit(1).execute()
 
@@ -65,19 +63,19 @@ def fetch_personality_settings(user_id: str = None, client_id: str = None) -> di
         return {}  # No data found
 
 @function_tool    
-def fetch_client_and_project_data(client_id: str) -> dict:
+def fetch_client_and_project_data(client_email: str) -> dict:
     """
     Fetch key client and project context for the LLM agent.
     Returns minimal structured data.
     """
 
-    if not client_id:
-        raise ValueError("client_id is required")
+    if not client_email:
+        raise ValueError("client_email is required")
 
     # ---- Fetch client ----
     client_result = supabase.table("clients") \
         .select("id, name, industry, contact_name, contact_email, priority_level, client_notes") \
-        .eq("id", client_id) \
+        .eq("contact_email", client_email) \
         .limit(1) \
         .execute()
 
@@ -85,6 +83,7 @@ def fetch_client_and_project_data(client_id: str) -> dict:
         return {}
 
     client = client_result.data[0]
+    client_id = client.get("id")  #  UUID
 
     # ---- Fetch related projects ----
     project_result = supabase.table("projects") \
@@ -117,15 +116,14 @@ def fetch_client_and_project_data(client_id: str) -> dict:
         ]
     }
 
-# if __name__ == "__main__":
-    
-    # data=fetch_client_and_project_data(client_id="1ad1e31e-11ca-4342-84bb-eec461585c05")
-    # print(data) 
-    
-    # settings=fetch_personality_settings(user_id="0b669362-6720-47df-a788-d4094e1cfade")
-    # print(f"📥 Personality settings from Supabase: {settings}")
-    
-    # client_emails = fetch_client_emails()
-    # print("📥 Client emails from Supabase:")
-    # for email in client_emails:
-    #     print(" -", email)
+   
+# data=fetch_client_and_project_data("nandaniramoliya@gmail.com")
+# print(data) 
+
+# settings=fetch_personality_settings("nandaniramoliya@gmail.com")
+# print(f"📥 Personality settings from Supabase: {settings}")
+
+# client_emails = fetch_client_emails()
+# print("📥 Client emails from Supabase:")
+# for email in client_emails:
+#     print(" -", email)
