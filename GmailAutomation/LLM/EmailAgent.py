@@ -8,9 +8,6 @@ import json
 import ast
 import re
 
-# ----------------------------
-# Load environment variables
-# ----------------------------
 load_dotenv()
 
 # ----------------------------
@@ -152,9 +149,7 @@ need for assistance, despite an empty body only with attachment.", "response": "
     # tools=[fetch_personality_settings, fetch_client_and_project_data],
 )
 
-# ----------------------------
-# Helper function: format dict → message string
-# ----------------------------
+# format dict → message string
 def dict_to_message_text(raw: dict) -> str:
     return f"""Message_ID: {raw.get('id', raw.get('Message_ID', ''))}
 From: {raw.get('from', raw.get('From', ''))}
@@ -166,6 +161,8 @@ Date: {raw.get('date', raw.get('Date', ''))}
 attachment_data: 
 \"\"\"{raw.get('attachments', raw.get('attachment_data', []))}\"\"\"
 """
+
+# format string → message dict
 def llm_response_to_dict(response_str: str) -> dict:
     """
     Convert LLM text response into a Python dict safely.

@@ -8,15 +8,6 @@
 #     'attachment_data': [{'filename': 'image.png', 'mimeType': 'image/png', 'path': 'attachments/image.png'}]
 #     }
 
-raw={
-    "Message_ID": "1999fb8c1e11f668", 
-    "query": "Hello I am facing issue in database connection.", 
-    "escalate": True, 
-    "priority": "high",
-    "escalation_reason": "User is experiencing a database connection issue.", 
-    "response": "A database connection error may arise from several reasons. You might try to check your database credentials and ensure the database server is running. If this does not resolve the issue, please let me know, and I will escalate it to our technical team.",
-    "subject": "Re: Getting Error", "to_email": "nandaniramoliya@gmail.com", "reply_to": True}
-
 # raw={
 #     'Message_ID': '1999fb8c1e11f668',
 #     "query": "This database issue is still not solved",

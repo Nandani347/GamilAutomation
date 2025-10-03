@@ -14,18 +14,15 @@ DEFAULT_USER_ID = "me"
 
 # Gmail API scopes
 GMAIL_SCOPES = [
+    "https://www.googleapis.com/auth/gmail.modify",
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.send",
     "https://www.googleapis.com/auth/gmail.compose",
     "https://www.googleapis.com/auth/gmail.labels",
 ]
 
-# For simpler testing
-GMAIL_MODIFY_SCOPE = ["https://www.googleapis.com/auth/gmail.modify"]
-
 # Type alias for the Gmail service
 GmailService = Resource
-
 
 def get_gmail_service(
     credentials_path: str = DEFAULT_CREDENTIALS_PATH,

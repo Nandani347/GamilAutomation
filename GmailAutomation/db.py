@@ -3,13 +3,12 @@ from dotenv import load_dotenv
 from agents import function_tool
 import os
 
-load_dotenv()  # take environment variables from .env.
-
+load_dotenv()  
 # ---------------------------
 # Config
 # ---------------------------
-SUPABASE_URL = os.getenv("SUPABASE_URL")  # "https://iqeczjgesbyskcyrpyob.supabase.co"
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")  # "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxZWN6amdlc2J5c2tjeXJweW9iIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzQyOTk3OSwiZXhwIjoyMDY5MDA1OTc5fQ.J8-SzxPV748ZzmXAdlzHMsfif2lCxtMx5mfLGHkqVRQ"
+SUPABASE_URL = os.getenv("SUPABASE_URL")  
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")  
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise Exception("⚠️ Please set SUPABASE_URL and SUPABASE_KEY environment variables")
@@ -120,8 +119,8 @@ def fetch_client_and_project_data(client_id: str) -> dict:
 
 # if __name__ == "__main__":
     
-#     data=fetch_client_and_project_data(client_id="1ad1e31e-11ca-4342-84bb-eec461585c05")
-#     print(data) 
+    # data=fetch_client_and_project_data(client_id="1ad1e31e-11ca-4342-84bb-eec461585c05")
+    # print(data) 
     
     # settings=fetch_personality_settings(user_id="0b669362-6720-47df-a788-d4094e1cfade")
     # print(f"📥 Personality settings from Supabase: {settings}")

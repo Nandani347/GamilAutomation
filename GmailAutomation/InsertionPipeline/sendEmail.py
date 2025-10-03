@@ -2,17 +2,15 @@ import base64
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Any, Dict
-
 from googleapiclient.discovery import Resource
-
 from GmailAutomation.auth import get_gmail_service
+from logger import logger
 
 DEFAULT_USER_ID = "me"
 EMAIL_PREVIEW_LENGTH = 500  # Number of characters to show in preview
 
 # Initialize Gmail service
 service: Resource = get_gmail_service()
-
 
 def create_mime_message(sender: str, to: str, subject: str, body: str) -> Dict[str, Any]:
     """Create a MIME message for sending via Gmail API"""
@@ -24,7 +22,6 @@ def create_mime_message(sender: str, to: str, subject: str, body: str) -> Dict[s
 
     raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode()
     return {"raw": raw_message}
-
 
 def create_reply_message(service: Resource, user_id: str, message_id: str, body: str) -> Dict[str, Any]:
     """Create a reply to an existing email"""
@@ -49,7 +46,6 @@ def create_reply_message(service: Resource, user_id: str, message_id: str, body:
     raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
     return {"raw": raw_message, "threadId": thread_id}
 
-
 def send_email(to: str, subject: str, body: str) -> str:
     """Send a direct email"""
     sender = service.users().getProfile(userId=DEFAULT_USER_ID).execute().get("emailAddress")
@@ -57,13 +53,11 @@ def send_email(to: str, subject: str, body: str) -> str:
     sent = service.users().messages().send(userId=DEFAULT_USER_ID, body=message).execute()
 
     return f"""
-✅ Email sent successfully direct to the inbox!
 To: {to}
 Subject: {subject}
 Message ID: {sent.get("id")}
 Body: {body[:EMAIL_PREVIEW_LENGTH]}{"..." if len(body) > EMAIL_PREVIEW_LENGTH else ""}
 """
-
 
 def send_reply(message_id: str, body: str) -> str:
     """Send a reply to an existing message"""
@@ -71,13 +65,10 @@ def send_reply(message_id: str, body: str) -> str:
     sent = service.users().messages().send(userId=DEFAULT_USER_ID, body=reply_msg).execute()
 
     return f"""
-✅ Reply sent successfully in initial email reply !!
-Reply Message ID: {sent.get("id")}
-Thread ID: {sent.get("threadId")}
-In-Reply-To: {message_id}
+Thread ID: {sent.get("id")}
+Message ID: {message_id}
 Body: {body[:EMAIL_PREVIEW_LENGTH]}{"..." if len(body) > EMAIL_PREVIEW_LENGTH else ""}
 """
-
 
 def handle_escalation(subject: str, reason: str) -> str:
     """Generate escalation email body"""
@@ -92,3 +83,17 @@ Please address this issue as soon as possible.
 Automated Email System
 """
     return escalation_body
+
+def mark_message_as_read(service, user_id: str, message_id: str):
+    """
+    Remove the UNREAD label from a message.
+    """
+    try:
+        service.users().messages().modify(
+            userId=user_id,
+            id=message_id,
+            body={'removeLabelIds': ['UNREAD']}
+        ).execute()
+    except Exception as e:
+        logger.error(f"Failed to mark message as read: {e}")
+
