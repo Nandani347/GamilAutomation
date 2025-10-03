@@ -177,18 +177,7 @@ def llm_response_to_dict(response_str: str) -> dict:
     # 1. Strip markdown fences like ```json ... ```
     cleaned = re.sub(r"^```(?:json)?|```$", "", response_str.strip(), flags=re.MULTILINE).strip()
 
-    # 2. Normalize common LLM mistakes
-    cleaned = cleaned.replace("true", "true").replace("false", "false").replace("null", "null")
-    # Fix accidental double quotes (""Something"") → "Something"
-    cleaned = re.sub(r'""([^"]+)""', r'"\1"', cleaned)
-
-    # 3. Try JSON parse
-    try:
-        return json.loads(cleaned)
-    except Exception:
-        pass
-
-    # 4. If JSON fails, fallback to Python literal
+    # 2. If JSON fails, fallback to Python literal
     try:
         # replace json booleans for Python eval
         py_ready = cleaned.replace("true", "True").replace("false", "False").replace("null", "None")

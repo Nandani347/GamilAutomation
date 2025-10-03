@@ -65,8 +65,8 @@ def send_reply(message_id: str, body: str) -> str:
     sent = service.users().messages().send(userId=DEFAULT_USER_ID, body=reply_msg).execute()
 
     return f"""
-Thread ID: {sent.get("id")}
 Message ID: {message_id}
+Thread ID: {sent.get("id")}
 Body: {body[:EMAIL_PREVIEW_LENGTH]}{"..." if len(body) > EMAIL_PREVIEW_LENGTH else ""}
 """
 

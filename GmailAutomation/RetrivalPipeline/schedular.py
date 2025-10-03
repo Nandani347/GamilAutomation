@@ -5,29 +5,8 @@ import time
 
 from logger import logger
 from datetime import datetime
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from GmailAutomation.auth import get_gmail_service
 from GmailAutomation.db import fetch_client_emails
-
-
-# Initialize the Gmail service
-service = get_gmail_service()
-
-# ------------------------------------------------------------
-# Gmail API Setup
-# ------------------------------------------------------------
-
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
-
-
-def get_gmail_service():
-    if not os.path.exists("token.json"):
-        raise Exception("⚠️ Missing token.json. Run Gmail OAuth flow first.")
-    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    return build("gmail", "v1", credentials=creds)
-
 
 # ------------------------------------------------------------
 # Polling Logic
@@ -52,7 +31,6 @@ Feched irrelevant -> replace with
 \n\r -> \n
 '   ' -> ' ' (single space)
 """
-
 
 def fetch_new_emails(service):
     global last_history_id

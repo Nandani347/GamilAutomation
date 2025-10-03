@@ -1,4 +1,3 @@
-
 import tempfile
 import time
 from GmailAutomation.InsertionPipeline.sendEmail import handle_escalation, mark_message_as_read, send_email, send_reply
@@ -6,15 +5,12 @@ from GmailAutomation.LLM.EmailAgent import process_email
 from GmailAutomation.RetrivalPipeline.schedular import download_attachment, fetch_new_emails, get_gmail_service
 from logger import logger
 
-
-
 # ------------------------------------------------------------
 # Polling Logic
 # ------------------------------------------------------------
 global last_history_id
 no_email_counter = 0  # counts iterations with no new emails
 HEARTBEAT_INTERVAL = 20  # how many cycles before logging "still running"
-
 
 service = get_gmail_service()
 logger.info("🚀 Starting Gmail Trigger (poll every 3s)...")
